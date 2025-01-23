@@ -18,6 +18,8 @@ window.app = {
     onSetFilterBy,
 }
 
+var gUserPos = null
+
 function onInit() {
     getFilterByFromQueryParams()
     loadAndRenderLocs()
@@ -37,11 +39,14 @@ function renderLocs(locs) {
 
     var strHTML = locs.map(loc => {
         const className = (loc.id === selectedLocId) ? 'active' : ''
+        const distance = gUserPos ? utilService.getDistance(gUserPos, loc.geo, 'K') : null
+
         return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
                 <span>${loc.name}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
+                ${distance ? `<span class="distance">(${distance}km)</span>` : ''}
             </h4>
             <p class="muted">
                 Created: ${utilService.elapsedTime(loc.createdAt)}
@@ -132,6 +137,7 @@ function loadAndRenderLocs() {
 function onPanToUserPos() {
     mapService.getUserPosition()
         .then(latLng => {
+            gUserPos = latLng
             mapService.panTo({ ...latLng, zoom: 15 })
             unDisplayLoc()
             loadAndRenderLocs()
